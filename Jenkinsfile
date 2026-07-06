@@ -18,4 +18,12 @@ pipeline {
             }
         }
     }
+    post {
+        success {
+            bat 'echo BUILD SUCCESSFUL: The pipeline executed without errors.'
+        }
+        failure {
+            bat 'echo BUILD FAILED: An error occurred during execution.'
+        }
+    }
 }
