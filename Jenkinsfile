@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                echo 'Running automated tests...'
+                echo 'Running automated verification test suites...'
             }
         }
         stage('Deploy') {
