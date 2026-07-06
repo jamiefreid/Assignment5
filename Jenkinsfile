@@ -1,18 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        APP_NAME = 'Jenkins-CI-Demo'
-    }
-
-    parameters {
-        string(name: 'DEPLOY_ENV', defaultValue: 'Staging', description: 'Target environment for deployment (e.g., Staging, Production)')
-    }
-
     stages {
         stage('Build') {
             steps {
-                echo "Building the application: ${env.APP_NAME}..."
+                echo 'Building the application...'
             }
         }
         stage('Test') {
@@ -22,7 +14,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                echo "Deploying ${env.APP_NAME} to the ${params.DEPLOY_ENV} environment..."
+                echo 'Deploying the application...'
             }
         }
     }
