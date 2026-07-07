@@ -26,11 +26,12 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    bat """
-                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
-                    docker push ${env.IMAGE_NAME}:latest
-                    docker logout
-                    """
+                    // Login
+                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                    // Push
+                    bat "docker push ${env.IMAGE_NAME}:latest"
+                    // Logout
+                    bat 'docker logout'
                 }
             }
         }
