@@ -2,13 +2,15 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "jamiefreid/assignment5" 
+        AWS_REGION = "us-east-1" 
+        ECR_REPO_URI = "524843733539.dkr.ecr.us-east-1.amazonaws.com/assignment5"
+        IMAGE_NAME = "assignment5"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/jamiefreid/Assignment5'
+                git branch: 'main', url: 'https://github.com/jamiefreid/Assignment5.git'
             }
         }
         stage('Test') {
@@ -18,30 +20,35 @@ pipeline {
                 bat 'python -m unittest test_app.py'
             }
         }
-        stage('Build Docker Image') {
+        stage('Build and Tag Image') {
             steps {
+                // Build the image locally
                 bat "docker build -t ${env.IMAGE_NAME}:latest ."
+                // Tag the image specifically for the AWS ECR repository
+                bat "docker tag ${env.IMAGE_NAME}:latest ${env.ECR_REPO_URI}:latest"
             }
         }
-        stage('Push to Docker Hub') {
+        stage('Push to AWS ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    // Login
-                    bat 'echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin'
-                    // Push
-                    bat "docker push ${env.IMAGE_NAME}:latest"
-                    // Logout
-                    bat 'docker logout'
+                withAWS(region: "${env.AWS_REGION}", credentials: 'aws-creds') {
+                    // Fetch the ECR credentials
+                    bat "aws ecr get-login-password --region ${env.AWS_REGION}| docker login --username AWS --password-stdin ${env.ECR_REPO_URI}"
+                    
+                    // Push the tagged image
+                    bat "docker push ${env.ECR_REPO_URI}:latest"
+                    
+                    // Securely log out
+                    bat "docker logout ${env.ECR_REPO_URI}"
                 }
             }
         }
     }
     post {
         success {
-            bat 'echo BUILD SUCCESSFUL: The pipeline executed without errors.'
+            bat 'echo BUILD SUCCESSFUL: Pushed to AWS ECR.'
         }
         failure {
-            bat 'echo BUILD FAILED: An error occurred during execution.'
+            bat 'echo BUILD FAILED: Check the logs for errors.'
         }
     }
 }
